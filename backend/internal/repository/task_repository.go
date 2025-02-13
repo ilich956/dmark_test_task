@@ -18,13 +18,13 @@ func NewTaskRepository(db *sql.DB, logger *slog.Logger) *TaskRepository {
 
 func (r *TaskRepository) InitDB() error {
 	query := `CREATE TABLE IF NOT EXISTS tasks(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    description TEXT,
-	deadline    DATETIME NOT NULL,
-	priority    TEXT NOT NULL CHECK(status IN ('Low', 'Medium', 'High'),
-	status      TEXT NOT NULL CHECK(status IN ('Pending', 'In progress', 'Completed'))
-)`
+	    id INTEGER PRIMARY KEY AUTOINCREMENT,
+	    title TEXT NOT NULL,
+	    description TEXT,
+		deadline    DATETIME NOT NULL,
+		priority    TEXT NOT NULL CHECK(priority IN ('Low', 'Medium', 'High')),
+		status      TEXT NOT NULL CHECK(status IN ('Pending', 'In progress', 'Completed')) DEFAULT 'Pending'
+	);`
 	_, err := r.db.Exec(query)
 	if err != nil {
 		r.logger.Error("Failed to create table", "error", err)
@@ -57,8 +57,8 @@ func (r *TaskRepository) GetTasks() ([]models.Task, error) {
 	return tasks, nil
 }
 
-func (r *TaskRepository) InsertTask(title, description, deadline, priority string) error {
-	_, err := r.db.Exec("INSERT INTO tasks (title, description, deadline, priority) VALUES (?,?,?,?)", title, description, deadline, priority)
+func (r *TaskRepository) InsertTask(title, description, deadline, priority, status string) error {
+	_, err := r.db.Exec("INSERT INTO tasks (title, description, deadline, priority, status) VALUES (?,?,?,?,?)", title, description, deadline, priority, status)
 	if err != nil {
 		r.logger.Error("Failed to execute INSERT query", "error", err)
 		return err
