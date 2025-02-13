@@ -9,6 +9,8 @@ import (
 	"todolist/backend/internal/repository"
 	"todolist/backend/internal/services"
 	"todolist/backend/models"
+
+	_ "modernc.org/sqlite"
 )
 
 // App struct
@@ -28,7 +30,7 @@ func NewApp() *App {
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
 func (a *App) Startup(ctx context.Context) {
-	db, err := sql.Open("sqlite3", "backend/database/tasks.db")
+	db, err := sql.Open("sqlite", "backend/database/tasks.db")
 	if err != nil {
 		a.logger.Error("Failed to open database", "error", err)
 	}
@@ -56,6 +58,14 @@ func (a *App) GetTasks() ([]models.Task, error) {
 	return a.taskHandler.GetTasksHandler()
 }
 
-func (a *App) InsertTask(title, description, deadline, priority string) error {
-	return a.taskHandler.InsertTasksHandler(title, description, deadline, priority)
+func (a *App) InsertTask(title, description, deadline, priority, status string) error {
+	return a.taskHandler.InsertTasksHandler(title, description, deadline, priority, status)
+}
+
+func (a *App) UpdateTask(id int, title, description, deadline, priority, status string) error {
+	return a.taskHandler.UpdateTasksHandler(id, title, description, deadline, priority)
+}
+
+func (a *App) DeleteTask(id int) error {
+	return a.taskHandler.DeleteTasksHandler(id)
 }
