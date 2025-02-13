@@ -19,8 +19,8 @@ func (s *TaskService) GetTasksService() ([]models.Task, error) {
 	return s.taskRepo.GetTasks()
 }
 
-func (s *TaskService) InsertTaskService(title, description, deadline, priority string) error {
-	return s.taskRepo.InsertTask(title, description, deadline, priority)
+func (s *TaskService) InsertTaskService(title, description, deadline, priority, status string) error {
+	return s.taskRepo.InsertTask(title, description, deadline, priority, status)
 }
 
 func (s *TaskService) UpdateTaskService(id int, title, description, deadline, priority string) error {
