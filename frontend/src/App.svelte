@@ -3,14 +3,10 @@ import { onMount } from 'svelte';
 import {SvelteUIProvider , Button, Input, Textarea, Card, Title, Group, Badge, NativeSelect, Alert, Modal } from '@svelteuidev/core';
 import { ChevronDown, InfoCircled } from 'radix-icons-svelte';
 import { writable } from 'svelte/store';
-import { GetTasks, InsertTask, UpdateTask, DeleteTask } from "../wailsjs/go/backend/App.js";
 import { fetchTasks, addTask, deleteTask, updateTask, tasks, newTask, isAlert } from "./taskService.js";
 
   const TASK_STATUS = ["Pending", "In progress", "Completed"];
   const TASK_PRIORITY = ["Low", "Medium", "High"];
-  
-  // let tasks = writable([]);
-  // let newTask = writable({ title: '', description: '', deadline: '', priority: '', status: '' });
 
   let showDeletePopUp = writable(false);
   let showUpdatePopUp = writable(false);
@@ -18,8 +14,7 @@ import { fetchTasks, addTask, deleteTask, updateTask, tasks, newTask, isAlert } 
   let taskToDelete = writable(null);
   let taskToUpdate = writable(null);
 
-  // let isAlert = writable(false);
-
+// sorting order and priority ranking for sorting
   let sortOrder = writable("ascending");
   const priorityOrder = {
         "Low": 1,
@@ -27,10 +22,12 @@ import { fetchTasks, addTask, deleteTask, updateTask, tasks, newTask, isAlert } 
         "High": 3
     };
 
+  // execute when component is initialized
   onMount(async () => {
     fetchTasks();
   });
 
+  // Function to sort tasks based on priority
   function sortTasksByPriority() {
     tasks.update(currentTasks => {
         const order = $sortOrder === "ascending" ? 1 : -1;
@@ -38,77 +35,13 @@ import { fetchTasks, addTask, deleteTask, updateTask, tasks, newTask, isAlert } 
     });
 }
 
-  // async function fetchTasks() {
-  //   try {
-  //     const result = await GetTasks();
-  //     if (result == null) {
-  //       tasks.set([]);
-  //     } else {
-  //       tasks.set(result);
-  //     }
-
-  //     console.log("fetched: ", result);
-  //   } catch (error) {
-  //     alert("Error fetching tasks:")
-  //     console.error("Error fetching tasks:", error);
-  //   }
-  // }
-
-  // async function addTask() {
-  //   try {
-  //     const task = $newTask;
-  //     if (task.title == "") {
-  //       isAlert.set(true);
-  //       setTimeout(() => {
-  //         isAlert.set(false);
-  //       }, 3000);
-
-  //       return;
-  //     }
-  //     if (task.priority == "") {
-  //       task.priority = "Low";
-  //     }
-  //     if (task.status == "") {
-  //       task.status = "Pending";
-  //     }
-  //     if (task.deadline == "") {
-  //       task.deadline = "none";
-  //     }
-
-  //     await InsertTask(task.title, task.description, task.deadline, task.priority, task.status);
-  //     newTask.set({ title: "", description: "", deadline: "", priority: "", status: "" });
-  //     fetchTasks();
-  //   } catch (error) {
-  //     alert("Error adding task:");
-  //     console.error("Error adding task:", error);
-  //   }
-  // }
-
-  // async function deleteTask(id) {
-  //   try {
-  //     await DeleteTask(id);
-  //     fetchTasks();
-  //   } catch (error) {
-  //     alert("Error deleting task:");
-  //     console.error("Error deleting task:", error);
-  //   }
-  // }
-
-  // async function updateTask(id, priority, status) {
-  //   try {
-  //     await UpdateTask(id, priority, status);
-  //     fetchTasks();
-  //   } catch (error) {
-  //     alert("Error updating task:");
-  //     console.error("Error updating task:", error);
-  //   }
-  // }
-
+  // Open delete confirmation modal
   function openDeletePopUp(task) {
     taskToDelete.set(task.ID);
     showDeletePopUp.set(true);
   }
 
+  // Open update modal and set the selected task details
   function openUpdatePopUp(task) {
     taskToUpdate.set({
       ID: task.ID,
@@ -118,6 +51,7 @@ import { fetchTasks, addTask, deleteTask, updateTask, tasks, newTask, isAlert } 
     showUpdatePopUp.set(true);
   }
 
+  //close modals
   function closeDeletePopUp() {
     showDeletePopUp.set(false);
   }
@@ -126,32 +60,39 @@ import { fetchTasks, addTask, deleteTask, updateTask, tasks, newTask, isAlert } 
     showUpdatePopUp.set(false);
   }
 
+  //confirm deletion of task
   async function confirmDelete() {
     const id = $taskToDelete;
     deleteTask(id);
     closeDeletePopUp();
   }
 
+  //Confirm deletion of task
   async function confirmUpdate() {
     const task = $taskToUpdate;
     updateTask(task.ID, task.priority, task.status);
     closeUpdatePopUp();
   }
 
+  //Reactive statement to filter tasks
   $: completedTasks = $tasks.filter((task) => task.Status === "Completed");
   $: console.log($tasks);
 </script>
 
 <SvelteUIProvider>
   <main>
+     <!-- Alert for missing task title -->
     {#if $isAlert}
       <Alert icon={InfoCircled} title="Oopsie!" variant="filled" radius="xs" withCloseButton on:close={() => isAlert.set(false)}>
         Enter a title for the task!
       </Alert>
     {/if}
+
+    <!-- Main Title -->
     <Title order={1} align="center" style="color: aliceblue; margin-bottom:30px">Simple todo list 📝</Title
     >
 
+    <!-- Task Input Card -->
     <Card withBorder shadow="md" padding="xl" mt="md">
       <Group position="apart" mb="md">
         <Input placeholder="Task title" bind:value={$newTask.title} />
@@ -187,11 +128,10 @@ import { fetchTasks, addTask, deleteTask, updateTask, tasks, newTask, isAlert } 
           <svelte:component this={ChevronDown} slot="rightSection" />
         </NativeSelect>
       </Group>
-    
-    
     </Card>
 
-    <Title order={2} color="white" align="center" style="padding-top: 20px;">Pending / In Progress Tasks</Title>
+     <!-- Available Tasks -->
+    <Title order={2} color="white" align="center" style="padding-top: 20px;">Available Tasks</Title>
     {#each $tasks as task (task.ID)}
       {#if task.Status !== "Completed"}
         <Card withBorder shadow="sm" padding="md" mt="md" class={task.Status === "Completed" ? "inactive" : ""}>
@@ -226,6 +166,7 @@ import { fetchTasks, addTask, deleteTask, updateTask, tasks, newTask, isAlert } 
       {/if}
     {/each}
 
+    <!-- Completed tasks Section -->
     <Title order={2} color="white" align="center" style="padding-top: 20px;"
       >Completed Tasks</Title
     >
@@ -253,6 +194,7 @@ import { fetchTasks, addTask, deleteTask, updateTask, tasks, newTask, isAlert } 
       </Card>
     {/each}
 
+    <!-- Delete confirmation modal -->
     <Modal
       bind:opened={$showDeletePopUp}
       withCloseButton={false}
@@ -268,6 +210,7 @@ import { fetchTasks, addTask, deleteTask, updateTask, tasks, newTask, isAlert } 
       </div>
     </Modal>
 
+    <!-- Update task modal -->
     <Modal
       bind:opened={$showUpdatePopUp}
       withCloseButton={false}
