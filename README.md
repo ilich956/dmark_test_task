@@ -65,8 +65,8 @@ src/: Contains the Svelte components and other frontend assets.
 
 ### Clone the Repository
 ```sh
-git clone https://github.com/your-username/your-todo-app.git
-cd todolist
+git clone https://github.com/ilich956/dmark_test_task.git
+cd dmark_test_task
 ```
 ### Install the frontend dependencies
 ```sh
@@ -75,13 +75,13 @@ npm install
 ```
 
 ### Run the Application
-In **todotask/** directory
+In project directory
 ```sh
 wails dev
 ```
 
 ### Build for Production
-In **todotask/** directory
+In project directory
 ```sh
 wails build
 ```
