@@ -16,13 +16,14 @@ func NewTaskRepository(db *sql.DB, logger *slog.Logger) *TaskRepository {
 	return &TaskRepository{db: db, logger: logger}
 }
 
+// creates table
 func (r *TaskRepository) InitDB() error {
 	query := `CREATE TABLE IF NOT EXISTS tasks(
 	    id INTEGER PRIMARY KEY AUTOINCREMENT,
 	    title TEXT NOT NULL,
 	    description TEXT,
 		deadline    DATETIME NOT NULL,
-		priority    TEXT NOT NULL CHECK(priority IN ('Low', 'Medium', 'High')),
+		priority    TEXT NOT NULL CHECK(priority IN ('Low', 'Medium', 'High')) DEFAULT 'Low',
 		status      TEXT NOT NULL CHECK(status IN ('Pending', 'In progress', 'Completed')) DEFAULT 'Pending'
 	);`
 	_, err := r.db.Exec(query)
@@ -66,8 +67,8 @@ func (r *TaskRepository) InsertTask(title, description, deadline, priority, stat
 	return nil
 }
 
-func (r *TaskRepository) UpdateTask(id int, title, description, deadline, priority string) error {
-	_, err := r.db.Exec("UPDATE tasks SET title = ?, description = ?, deadline = ?, priority = ? WHERE id = ?", title, description, deadline, priority, id)
+func (r *TaskRepository) UpdateTask(id int, priority, status string) error {
+	_, err := r.db.Exec("UPDATE tasks SET priority = ?, status = ? WHERE id = ?", priority, status, id)
 	if err != nil {
 		r.logger.Error("Failed to execute UPDATE query", "error", err)
 		return err

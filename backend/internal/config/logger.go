@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 )
 
+// initializes and returns a new slog.Logger
 func NewLogger() *slog.Logger {
 	opts := &slog.HandlerOptions{
 		AddSource: true,

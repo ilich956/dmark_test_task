@@ -62,8 +62,8 @@ func (a *App) InsertTask(title, description, deadline, priority, status string) 
 	return a.taskHandler.InsertTasksHandler(title, description, deadline, priority, status)
 }
 
-func (a *App) UpdateTask(id int, title, description, deadline, priority, status string) error {
-	return a.taskHandler.UpdateTasksHandler(id, title, description, deadline, priority)
+func (a *App) UpdateTask(id int, priority, status string) error {
+	return a.taskHandler.UpdateTasksHandler(id, priority, status)
 }
 
 func (a *App) DeleteTask(id int) error {

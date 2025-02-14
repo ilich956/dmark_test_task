@@ -6,6 +6,7 @@ import (
 	"todolist/backend/models"
 )
 
+// Methods to task related operations
 type TaskService struct {
 	taskRepo *repository.TaskRepository
 	logger   *slog.Logger
@@ -23,8 +24,9 @@ func (s *TaskService) InsertTaskService(title, description, deadline, priority, 
 	return s.taskRepo.InsertTask(title, description, deadline, priority, status)
 }
 
-func (s *TaskService) UpdateTaskService(id int, title, description, deadline, priority string) error {
-	return s.taskRepo.UpdateTask(id, title, description, deadline, priority)
+// REWRITE THIS, IT SHOULD UPDATE ONLY STATUS AND PRIORITY
+func (s *TaskService) UpdateTaskService(id int, priority, status string) error {
+	return s.taskRepo.UpdateTask(id, priority, status)
 }
 
 func (s *TaskService) DeleteTaskService(id int) error {
