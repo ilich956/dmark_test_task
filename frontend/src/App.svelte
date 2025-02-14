@@ -4,10 +4,13 @@ import {SvelteUIProvider , Button, Input, Textarea, Card, Title, Group, Badge, N
 import { ChevronDown, InfoCircled } from 'radix-icons-svelte';
 import { writable } from 'svelte/store';
 import { GetTasks, InsertTask, UpdateTask, DeleteTask } from "../wailsjs/go/backend/App.js";
+import { fetchTasks, addTask, deleteTask, updateTask, tasks, newTask, isAlert } from "./taskService.js";
 
-  let tasks = writable([]);
-  let newTask = writable({ title: '', description: '', deadline: '', priority: '', status: '' });
-
+  const TASK_STATUS = ["Pending", "In progress", "Completed"];
+  const TASK_PRIORITY = ["Low", "Medium", "High"];
+  
+  // let tasks = writable([]);
+  // let newTask = writable({ title: '', description: '', deadline: '', priority: '', status: '' });
 
   let showDeletePopUp = writable(false);
   let showUpdatePopUp = writable(false);
@@ -15,7 +18,7 @@ import { GetTasks, InsertTask, UpdateTask, DeleteTask } from "../wailsjs/go/back
   let taskToDelete = writable(null);
   let taskToUpdate = writable(null);
 
-  let isAlert = writable(false);
+  // let isAlert = writable(false);
 
   let sortOrder = writable("ascending");
   const priorityOrder = {
@@ -28,21 +31,6 @@ import { GetTasks, InsertTask, UpdateTask, DeleteTask } from "../wailsjs/go/back
     fetchTasks();
   });
 
-  async function fetchTasks() {
-    try {
-      const result = await GetTasks();
-      if (result == null) {
-        tasks.set([]);
-      } else {
-        tasks.set(result);
-      }
-
-      console.log(result);
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
-    }
-  }
-
   function sortTasksByPriority() {
     tasks.update(currentTasks => {
         const order = $sortOrder === "ascending" ? 1 : -1;
@@ -50,51 +38,71 @@ import { GetTasks, InsertTask, UpdateTask, DeleteTask } from "../wailsjs/go/back
     });
 }
 
+  // async function fetchTasks() {
+  //   try {
+  //     const result = await GetTasks();
+  //     if (result == null) {
+  //       tasks.set([]);
+  //     } else {
+  //       tasks.set(result);
+  //     }
 
-  async function addTask() {
-    const task = $newTask;
-    if (task.title == "") {
-      isAlert.set(true);
-      setTimeout(() => {
-        isAlert.set(false);
-      }, 3000);
+  //     console.log("fetched: ", result);
+  //   } catch (error) {
+  //     alert("Error fetching tasks:")
+  //     console.error("Error fetching tasks:", error);
+  //   }
+  // }
 
-      return;
-    }
-    if (task.priority == "") {
-      task.priority = "Low";
-    }
-    if (task.status == "") {
-      task.status = "Pending";
-    }
-    if (task.deadline == "") {
-      task.deadline = "none";
-    }
+  // async function addTask() {
+  //   try {
+  //     const task = $newTask;
+  //     if (task.title == "") {
+  //       isAlert.set(true);
+  //       setTimeout(() => {
+  //         isAlert.set(false);
+  //       }, 3000);
 
-    await InsertTask( task.title, task.description, task.deadline, task.priority, task.status);
-    newTask.set({ title: "", description: "", deadline: "", priority: "", status: "",});
-    fetchTasks();
-  }
+  //       return;
+  //     }
+  //     if (task.priority == "") {
+  //       task.priority = "Low";
+  //     }
+  //     if (task.status == "") {
+  //       task.status = "Pending";
+  //     }
+  //     if (task.deadline == "") {
+  //       task.deadline = "none";
+  //     }
 
-  async function deleteTask(id) {
-    await DeleteTask(id);
-    fetchTasks();
-  }
+  //     await InsertTask(task.title, task.description, task.deadline, task.priority, task.status);
+  //     newTask.set({ title: "", description: "", deadline: "", priority: "", status: "" });
+  //     fetchTasks();
+  //   } catch (error) {
+  //     alert("Error adding task:");
+  //     console.error("Error adding task:", error);
+  //   }
+  // }
 
-  async function updateTask(id, updatedTask) {
-    await UpdateTask(id, updatedTask.priority, updatedTask.status);
-    fetchTasks();
-  }
+  // async function deleteTask(id) {
+  //   try {
+  //     await DeleteTask(id);
+  //     fetchTasks();
+  //   } catch (error) {
+  //     alert("Error deleting task:");
+  //     console.error("Error deleting task:", error);
+  //   }
+  // }
 
-  async function completeTask(task) {
-    await UpdateTask(task.ID, task.Priority, "Completed");
-    fetchTasks();
-  }
-
-  async function uncompleteTask(task) {
-    await UpdateTask(task.ID, task.Priority, "In progress");
-    fetchTasks();
-  }
+  // async function updateTask(id, priority, status) {
+  //   try {
+  //     await UpdateTask(id, priority, status);
+  //     fetchTasks();
+  //   } catch (error) {
+  //     alert("Error updating task:");
+  //     console.error("Error updating task:", error);
+  //   }
+  // }
 
   function openDeletePopUp(task) {
     taskToDelete.set(task.ID);
@@ -102,7 +110,6 @@ import { GetTasks, InsertTask, UpdateTask, DeleteTask } from "../wailsjs/go/back
   }
 
   function openUpdatePopUp(task) {
-    console.log("task: up: ", task);
     taskToUpdate.set({
       ID: task.ID,
       priority: task.Priority,
@@ -127,7 +134,7 @@ import { GetTasks, InsertTask, UpdateTask, DeleteTask } from "../wailsjs/go/back
 
   async function confirmUpdate() {
     const task = $taskToUpdate;
-    updateTask(task.ID, task);
+    updateTask(task.ID, task.priority, task.status);
     closeUpdatePopUp();
   }
 
@@ -142,7 +149,7 @@ import { GetTasks, InsertTask, UpdateTask, DeleteTask } from "../wailsjs/go/back
         Enter a title for the task!
       </Alert>
     {/if}
-    <Title order={1} align="center" style="color: aliceblue; padding-bottom: 20px;">Simple todo list 📝</Title
+    <Title order={1} align="center" style="color: aliceblue; margin-bottom:30px">Simple todo list 📝</Title
     >
 
     <Card withBorder shadow="md" padding="xl" mt="md">
@@ -156,29 +163,29 @@ import { GetTasks, InsertTask, UpdateTask, DeleteTask } from "../wailsjs/go/back
         <NativeSelect
           placeholder="Priority"
           bind:value={$newTask.priority}
-          data={["Low", "Medium", "High"]}
+          data={TASK_PRIORITY}
         >
           <svelte:component this={ChevronDown} slot="rightSection" />
         </NativeSelect>
         <NativeSelect
           placeholder="Status"
           bind:value={$newTask.status}
-          data={["Pending", "In progress", "Completed"]}
+          data={TASK_STATUS}
         >
           <svelte:component this={ChevronDown} slot="rightSection" />
         </NativeSelect>
       </Group>
       <Textarea
-        placeholder="Task description"
+        placeholder="Task description (optional)"
         bind:value={$newTask.description}
         mb="md"
       />
 
       <Group position="apart">
-      <Button on:click={addTask}>Add Task</Button>
-      <NativeSelect bind:value={$sortOrder} data={["ascending", "descending"]} on:change={sortTasksByPriority} label="Sort by priority" >
-        <svelte:component this={ChevronDown} slot="rightSection" />
-    </NativeSelect>
+        <Button on:click={addTask}>Add Task</Button>
+        <NativeSelect bind:value={$sortOrder} data={["ascending", "descending"]} on:change={sortTasksByPriority} label="Sort by priority" >
+          <svelte:component this={ChevronDown} slot="rightSection" />
+        </NativeSelect>
       </Group>
     
     
@@ -191,7 +198,7 @@ import { GetTasks, InsertTask, UpdateTask, DeleteTask } from "../wailsjs/go/back
           <Group position="apart">
             <Title order={3}>{task.Title}</Title>
             <Group position="apart">
-            <Badge color={task.Priority === "Low" ? "green" : task.Status === "Medium" ? "yellow" : "red"}>
+            <Badge color={task.Priority === "Low" ? "green" : task.Priority === "Medium" ? "yellow" : "red"}>
                 {task.Priority}
             </Badge>
             <Badge color={task.Status === "Pending" ? "blue" : task.Status === "In progress" ? "green" : "gray"}>
@@ -204,7 +211,7 @@ import { GetTasks, InsertTask, UpdateTask, DeleteTask } from "../wailsjs/go/back
             <small>Deadline: {task.Deadline}</small>
 
             <Group position="apart">
-              <Button color="green" on:click={() => completeTask(task)}>
+              <Button color="green" on:click={() => updateTask(task.ID, task.Priority, "Completed")}>
                 Done
               </Button>
               <Button color="blue" on:click={() => openUpdatePopUp(task)}>
@@ -235,7 +242,7 @@ import { GetTasks, InsertTask, UpdateTask, DeleteTask } from "../wailsjs/go/back
           <small>Deadline: {task.Deadline}</small>
 
           <Group position="apart">
-            <Button color="green" on:click={() => uncompleteTask(task)}>
+            <Button color="green" on:click={() => updateTask(task.ID, task.Priority, "In progress")}>
               Undone
             </Button>
             <Button color="red" on:click={() => openDeletePopUp(task)}>
@@ -273,7 +280,7 @@ import { GetTasks, InsertTask, UpdateTask, DeleteTask } from "../wailsjs/go/back
           <NativeSelect
             placeholder="Priority"
             bind:value={$taskToUpdate.priority}
-            data={["Low", "Medium", "High"]}
+            data={TASK_PRIORITY}
           >
             <svelte:component this={ChevronDown} slot="rightSection" />
           </NativeSelect>
@@ -298,6 +305,7 @@ import { GetTasks, InsertTask, UpdateTask, DeleteTask } from "../wailsjs/go/back
   main {
     padding: 10%;
   }
+
   .inactive {
     opacity: 0.5;
     pointer-events: none;
