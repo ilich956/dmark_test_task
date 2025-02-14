@@ -2,6 +2,8 @@
 
 A simple Todo application built using Wails.io
 
+![alt text](image-1.png)
+
 ## Features
 - Add, edit, and delete todos
 - Mark todos as completed
